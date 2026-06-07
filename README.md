@@ -1,22 +1,4 @@
-# Multi-Temporal-Change-Detection-Using-DeepLearning
-Identifying meaningful ground events across time using siamense networks and spatial temporal analysis
-Satellites now photograph every corner of the Earth on a near-daily basis, and
-the archives they produce are growing faster than any human analyst could
-possibly review. Change detection (CD) is the discipline that makes this flood
-of imagery actionable: given two images of the same area taken at different
-times, the goal is to automatically flag pixels where something meaningful has
-changed on the ground. The applications are immediate and concrete:
-• mapping deforestation in tropical and boreal biomes;
-• tracking urban expansion in rapidly developing cities;
-• assessingbuildingdamageafterearthquakesorfloodsbeforerescueteams
-are deployed;
-• monitoringcroprotationandseasonalland-usetransitionsinagricultural
-regions.
-The surge in freely available satellite data, particularly ESA’s Sentinel-2 con
-stellation, has removed the cost barrier that once limited change detection to
-government agencies. Anyone can now download metre-resolution imagery
-for any city on Earth. The bottleneck has shifted from data acquisition to data
-analysis, and that is exactly where deep learning enters the picture
+
 # Multi-Temporal Change Detection Using Deep Learning
 
 [![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python&logoColor=white)](https://www.python.org/)
