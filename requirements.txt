@@ -1,0 +1,12 @@
+# Multi-Temporal Change Detection - runtime dependencies
+# (all libraries actually imported by the notebook / package)
+torch>=2.0
+numpy
+matplotlib
+Pillow
+opencv-python
+scikit-learn
+albumentations
+rasterio
+einops
+tqdm

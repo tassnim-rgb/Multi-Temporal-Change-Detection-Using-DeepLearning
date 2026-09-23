@@ -1,13 +1,6 @@
 
 # Multi-Temporal Change Detection Using Deep Learning
 
-[![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python&logoColor=white)](https://www.python.org/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.x-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
-[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-[![Status](https://img.shields.io/badge/Status-Research-orange)]()
-
----
-
 ## Overview
 
 This repository contains the full implementation for **Project 10: Multi-Temporal Change Detection Using Deep Learning**, developed as part of the [Algerian Space Agency (ASAL)](https://www.asal.dz/) Incubator Programme 2025/2026 under the supervision of **Prof. Meziane IFTENE**.
@@ -95,74 +88,89 @@ Model checkpoints are saved at best validation F1.
 
 ## Repository Structure
 
+The canonical, fully-executed experiment lives in
+`multi_temporal_change_detection_using_dl.ipynb`. The same code is extracted
+into the `mtcd/` package so the study can be run as scripts:
+
 ```
 .
-├── data/
-│   ├── levir/                  # LEVIR-CD dataset (not included)
-│   └── oscd/                   # OSCD dataset (not included)
-├── models/
-│   ├── fc_siam_conc.py
-│   ├── fc_siam_diff.py
-│   ├── unet_cd.py
-│   ├── bit.py
-│   ├── dmfdil.py
-│   ├── bi_unet_dense.py
-│   └── convlstm_cd.py
-├── datasets/
-│   ├── levir_dataset.py
-│   └── oscd_dataset.py
-├── losses/
-│   └── focal_loss.py
-├── train.py
-├── evaluate.py
-├── infer.py
-├── configs/
-│   ├── levir_config.yaml
-│   └── oscd_config.yaml
-├── notebooks/
-│   ├── levir_training.ipynb
-│   └── oscd_training.ipynb
+├── mtcd/                          # extracted package (identical models, CFG, seeds)
+│   ├── config.py                  #   paths, hyper-parameters (SEED=42)
+│   ├── data.py                    #   LEVIR-CD + OSCD datasets and loaders
+│   ├── losses.py                  #   FocalLoss, IntraClassLoss (DMFDIL)
+│   ├── metrics.py                 #   F1 / IoU / precision / recall / kappa / OA
+│   ├── models.py                  #   the 6 architectures + Image-Diff wrapper
+│   ├── baselines.py               #   Otsu image-differencing baselines
+│   ├── train.py                   #   train / validate / fit engines
+│   ├── evaluate.py                #   predict_one, FP/FN rates
+│   ├── visualize.py               #   training curves, change maps, error analysis
+│   └── run_experiments.py         #   end-to-end reproduction entry point
+├── multi_temporal_change_detection_using_dl.ipynb   # canonical executed notebook
 ├── requirements.txt
+├── LICENSE
 └── README.md
 ```
-
----
 
 ## Installation
 
 ```bash
-git clone https://github.com/<your-username>/change-detection-dl.git
-cd change-detection-dl
+git clone https://github.com/tassnim-rgb/Multi-Temporal-Change-Detection-Using-DeepLearning.git
+cd Multi-Temporal-Change-Detection-Using-DeepLearning
 pip install -r requirements.txt
 ```
 
-**Requirements:** Python 3.10+, PyTorch 2.x, torchvision, numpy, rasterio, albumentations, tqdm, scikit-learn, matplotlib.
+**Requirements:** Python 3.10+, PyTorch, numpy, rasterio, albumentations,
+einops, opencv-python, scikit-learn, matplotlib, Pillow, tqdm.
 
----
+**Data:** datasets are not included. Download LEVIR-CD (official page) and
+OSCD (official page) and place them so `mtcd/config.py` finds them
+(`LEVIR_ROOT`, `ONERA_IMG_ROOT`, `ONERA_LBL_ROOT`
+default to `./LEVIR-CD`, `./Onera Satellite Change Detection dataset - Images`,
+`./Onera Satellite Change Detection dataset - Train Labels`).
 
 ## Usage
 
-### Training
+### Option A - Notebook (original)
+
+Open `multi_temporal_change_detection_using_dl.ipynb` and run top to bottom.
+The notebook hardcodes its output directory to `/content/outputs` (Colab) in
+cell 4; the package below is path-independent.
+
+### Option B - Package (extracted)
 
 ```bash
-# LEVIR-CD
-python train.py --config configs/levir_config.yaml --model unet_cd
+# Reproduce the full study: baselines, training of all models,
+# evaluation, figures, and results.json.
+python -m mtcd.run_experiments
 
-# OSCD
-python train.py --config configs/oscd_config.yaml --model convlstm_cd
+# Quick smoke run with fewer epochs
+python -m mtcd.run_experiments --epochs 5 --out runs/smoke
 ```
 
-### Evaluation
+Results land in `./outputs/` (`results.json`, training-curve/comparison/error
+figures, per-model best checkpoints).
 
-```bash
-python evaluate.py --config configs/levir_config.yaml --model unet_cd --checkpoint checkpoints/best_unet_cd.pth
-```
+## Reproducibility & Honest Limitations
 
-### Inference
+- **LEVIR-CD evaluation is in-domain.** To keep the Colab runtime low, the
+  notebook trains the LEVIR models on the official *test* split (128 pairs) and
+  validates on *val*; the reported F1 (U-Net CD 0.837) is therefore measured on
+  the same split used for training. Use it to compare *architectures and
+  training strategy*, not as an absolute benchmark against papers trained on
+  the full 445-pair *train* split. `build_levir_loaders()` documents this and
+  accepts any split name, so switching to `train` is a one-line change.
+- **OSCD evaluation is patch-level.** Sliding window patches from the 10 test
+  cities are scored per-pixel; rates are not mosaicked back to whole-city maps.
+- **F1 is the primary metric** because changed pixels are a small minority in
+  both datasets (class imbalance).
+- The observed OSCD gap (best F1 0.434 with Bi-UNet Dense) is attributed in
+  the study to the small training set (14 cities), seasonal pseudo-changes in
+  Sentinel-2 data, and coarser resolution, not to any single architecture.
 
-```bash
-python infer.py --t1 path/to/image_t1.tif --t2 path/to/image_t2.tif --model unet_cd --checkpoint checkpoints/best_unet_cd.pth --output change_map.png
-```
+## Technical Report
+
+`docs/REPORT.md` contains the full write-up: formulation, data, methodology,
+per-model results, error analysis, and reproducibility notes.
 
 ---
 
